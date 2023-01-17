@@ -7,10 +7,12 @@
 config {
   type: "view", // Creates a view in BigQuery. Try changing to "table" instead.
   columns: {
-    test: "A description for the test column", // Column descriptions are pushed to BigQuery.
+    browser: "browser of the user", // Column descriptions are pushed to BigQuery.
   }
 }
 
 -- The rest of a SQLX file contains your SELECT statement used to create the table.
 
-SELECT 1 as test
+SELECT 
+${constants.browser} as browser
+from  `bigquery-public-data.google_analytics_sample.ga_sessions_20170801`
