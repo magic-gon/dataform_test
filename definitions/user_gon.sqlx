@@ -24,19 +24,20 @@ FROM (
       COUNT(DISTINCT fullVisitorId|| '-'  ||visitStartTime) as number_sessions,
       ARRAY_AGG(geoNetwork.city ORDER BY visitStartTime)[OFFSET(0)] as first_city,
     FROM
-      ${dataform.projectConfig.vars.original_dataset}
+      `${dataform.projectConfig.vars.original_dataset}`
     WHERE
-      _table_suffix BETWEEN ${constants.START_DATE} AND ${constants.END_DATE}
+      _table_suffix BETWEEN '${constants.START_DATE}' AND '${constants.END_DATE}'
       GROUP BY 1
   ) AS A
   LEFT JOIN (
     SELECT 
       fullVisitorId,
       IF(COUNT(DISTINCT hits.transaction.transactionId)>=1, 1, 0) AS Transactions
-      FROM ${dataform.projectConfig.vars.original_dataset},
+      FROM 
+        `${dataform.projectConfig.vars.original_dataset}`,
       UNNEST(hits) as hits
     WHERE
-      _table_suffix BETWEEN ${constants.START_DATE} AND ${constants.END_DATE}
+      _table_suffix BETWEEN '${constants.START_DATE}' AND '${constants.END_DATE}'
       GROUP BY 1
   ) AS B
   ON A.fullvisitorId = B.fullVisitorID
