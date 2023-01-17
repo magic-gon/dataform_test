@@ -1,0 +1,42 @@
+-- This is an example SQLX file to help you learn the basics of Dataform.
+-- Visit https://cloud.google.com/dataform/docs/how-to for more information on how to configure your SQL workflow.
+
+-- You can delete this file, then commit and push your changes to your repository when you are ready.
+
+-- Config blocks allow you to configure, document, and test your data assets.
+config {
+  type: "view", // Creates a view in BigQuery. Try changing to "table" instead.
+  columns: {
+    browser: "browser of the user", // Column descriptions are pushed to BigQuery.
+  }
+}
+
+-- The rest of a SQLX file contains your SELECT statement used to create the table.
+
+SELECT 
+  A.fullVisitorId,
+  A.number_sessions,
+  A.first_city,
+  B.Transactions
+FROM (
+    SELECT
+      fullVisitorId,
+      COUNT(DISTINCT fullVisitorId|| '-'  ||visitStartTime) as number_sessions,
+      ARRAY_AGG(geoNetwork.city ORDER BY visitStartTime)[OFFSET(0)] as first_city,
+    FROM
+      ${dataform.projectConfig.vars.original_dataset}
+    WHERE
+      _table_suffix BETWEEN ${constants.START_DATE} AND ${constants.END_DATE}
+      GROUP BY 1
+  ) AS A
+  LEFT JOIN (
+    SELECT 
+      fullVisitorId,
+      IF(COUNT(DISTINCT hits.transaction.transactionId)>=1, 1, 0) AS Transactions
+      FROM ${dataform.projectConfig.vars.original_dataset},
+      UNNEST(hits) as hits
+    WHERE
+      _table_suffix BETWEEN ${constants.START_DATE} AND ${constants.END_DATE}
+      GROUP BY 1
+  ) AS B
+  ON A.fullvisitorId = B.fullVisitorID
